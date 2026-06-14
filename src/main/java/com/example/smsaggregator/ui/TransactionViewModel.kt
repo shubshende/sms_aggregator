@@ -173,10 +173,24 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
 
-        catMap.entries.filter { it.value > 0 }.sortedByDescending { it.value }.map { (cat, spent) ->
-            CatSlice(cat, spent, b.find { it.category == cat }?.monthlyLimit ?: 0.0, CatColor.tone(cat), CatColor.bg(cat), CatColor.icon(cat), cntMap[cat] ?: 0)
+        val validEntries = catMap.entries.filter { it.value > 0 }.sortedByDescending { it.value }
+        val totalSpent = validEntries.sumOf { it.value }
+
+        validEntries.map { (cat, spent) ->
+            val pct = if (totalSpent > 0) Math.round((spent / totalSpent) * 100).toInt() else 0
+            val shortName = if (cat.length > 11) cat.take(10) + "…" else cat
+            val label = "$shortName  $pct%"
+            CatSlice(cat, spent, b.find { it.category == cat }?.monthlyLimit ?: 0.0, CatColor.tone(cat), CatColor.bg(cat), CatColor.icon(cat), cntMap[cat] ?: 0, label)
         }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val otherCount: StateFlow<Int> = _transactions.map { txns -> 
+        txns.count { it.category == "Other" } 
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val uniqueSources: StateFlow<List<String>> = _transactions.map { txns -> 
+        listOf("All") + txns.map { it.source }.distinct().sorted()
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("All"))
 
     private val _budgetPrediction = MutableStateFlow<String?>(null)
     val budgetPrediction: StateFlow<String?> = _budgetPrediction.asStateFlow()

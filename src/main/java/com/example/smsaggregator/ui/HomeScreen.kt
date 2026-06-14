@@ -43,7 +43,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class CatSlice(val name: String, val spent: Double, val budget: Double, val color: Color, val bg: Color, val icon: String, val count: Int)
+data class CatSlice(val name: String, val spent: Double, val budget: Double, val color: Color, val bg: Color, val icon: String, val count: Int, val label: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +87,12 @@ fun M3HomeScreen(
     val bills by viewModel.bills.collectAsState()
     val unpaidBills = remember(bills) { bills.filter { !it.isPaid }.sortedBy { it.dueDate } }
 
+    val otherCount by viewModel.otherCount.collectAsState()
+
     val fmt = remember { NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply { maximumFractionDigits = 0 } }
+    val formattedTotalSpent = remember(totalSpent) { fmt.format(totalSpent) }
+    val formattedMonthIncome = remember(monthIncome) { "+ ${fmt.format(monthIncome)} received" }
+    
     val dayOfWeek = remember { SimpleDateFormat("EEEE", Locale.getDefault()).format(Date()).uppercase() }
     val dateStr = remember { SimpleDateFormat("dd MMMM", Locale.getDefault()).format(Date()).uppercase() }
     val greeting = remember {
@@ -207,8 +212,22 @@ fun M3HomeScreen(
                             if (isScanning) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             else Icon(Icons.Outlined.Refresh, "Scan SMS", tint = MaterialTheme.colorScheme.onSurface)
                         }
-                        IconButton(onClick = { searchActive = true }) {
-                            Icon(Icons.Outlined.Search, "Search", tint = MaterialTheme.colorScheme.onSurface)
+                        IconButton(onClick = onSearchClick) {
+                            Box {
+                                Icon(Icons.Rounded.Search, "Search", tint = MaterialTheme.colorScheme.onSurface)
+                                if (otherCount > 0) {
+                                    Box(
+                                        Modifier
+                                            .align(Alignment.TopEnd)
+                                            .size(10.dp)
+                                            .background(Color.Red, CircleShape)
+                                            .padding(1.dp),
+                                        Alignment.Center
+                                    ) {
+                                        Text(otherCount.toString(), color = Color.White, fontSize = 6.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
                         }
                         Box(
                             Modifier.size(36.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape).clickable { onSettingsClick() },
@@ -313,13 +332,10 @@ fun M3HomeScreen(
                                             drawLine(s.color, androidx.compose.ui.geometry.Offset(center.x + cosA * r1, center.y + sinA * r1), elbow, strokeWidth = 1.5.dp.toPx())
                                             drawLine(s.color, elbow, tickEnd, strokeWidth = 1.5.dp.toPx())
 
-                                            val pct = (frac * 100).roundToInt()
-                                            val shortName = if (s.name.length > 11) s.name.take(10) + "…" else s.name
-                                            val label = "$shortName  $pct%"
                                             namePaint.textAlign = if (onRight) android.graphics.Paint.Align.LEFT else android.graphics.Paint.Align.RIGHT
                                             val textX = tickEnd.x + if (onRight) 4.dp.toPx() else -4.dp.toPx()
                                             val textY = tickEnd.y + 4.dp.toPx()
-                                            drawContext.canvas.nativeCanvas.drawText(label, textX, textY, namePaint)
+                                            drawContext.canvas.nativeCanvas.drawText(s.label, textX, textY, namePaint)
                                         }
                                     }
                                     start += sweep
@@ -328,11 +344,11 @@ fun M3HomeScreen(
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("SPENT", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.2.sp, fontWeight = FontWeight.Medium)
-                            Text(fmt.format(totalSpent), fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 4.dp))
+                            Text(formattedTotalSpent, fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 4.dp))
                             if (monthIncome > 0) {
                                 Text(
-                                    "+ ${fmt.format(monthIncome)} received",
-                                    fontSize = 11.sp,
+                                    formattedMonthIncome,
+                                    fontSize = 12.sp,
                                     color = Color(0xFF2E7D32),
                                     fontWeight = FontWeight.Medium,
                                     modifier = Modifier.padding(top = 2.dp)
@@ -386,12 +402,12 @@ fun M3HomeScreen(
 
             // Filter Chips
             item {
-                val sources = remember(transactions) { listOf("All") + transactions.map { it.source }.distinct().sorted() }
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).horizontalScroll(rememberScrollState()),
+                val sources by viewModel.uniqueSources.collectAsState()
+                LazyRow(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    sources.forEach { source ->
+                    items(sources) { source ->
                         FilterChip(
                             selected = displaySource == source,
                             onClick = { viewModel.setSourceFilter(source) },
@@ -507,6 +523,10 @@ private val iconShape = RoundedCornerShape(12.dp)
 
 @Composable
 fun TransactionItem(t: Transaction, displayAmount: Double, fmt: NumberFormat, onClick: () -> Unit) {
+    val isCredit = t.type == com.example.smsaggregator.data.TransactionType.CREDIT
+    val amountStr = remember(displayAmount, isCredit) { 
+        if (isCredit) "+ ${fmt.format(displayAmount)}" else fmt.format(displayAmount) 
+    }
     Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp, 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(40.dp).background(CatColor.bg(t.category), iconShape), Alignment.Center) {
             Box(Modifier.size(16.dp).background(CatColor.tone(t.category), CircleShape))
@@ -516,9 +536,8 @@ fun TransactionItem(t: Transaction, displayAmount: Double, fmt: NumberFormat, on
             val dateText = remember(t.date) { com.example.smsaggregator.util.DateUtils.dayMonth(t.date) }
             Text("${t.category} · $dateText", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        val isCredit = t.type == com.example.smsaggregator.data.TransactionType.CREDIT
         Text(
-            text = if (isCredit) "+ ${fmt.format(displayAmount)}" else fmt.format(displayAmount),
+            text = amountStr,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = if (isCredit) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
