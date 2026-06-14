@@ -219,6 +219,19 @@ class MainActivity : FragmentActivity() {
             isUnlocked = true
         }
 
+        // Request maximum available refresh rate (e.g., 120Hz/144Hz) for smooth scrolling
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val displayManager = getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
+            val display = displayManager.getDisplay(android.view.Display.DEFAULT_DISPLAY)
+            val modes = display.supportedModes
+            val highResMode = modes.maxByOrNull { it.refreshRate }
+            if (highResMode != null) {
+                window.attributes = window.attributes.apply {
+                    preferredDisplayModeId = highResMode.modeId
+                }
+            }
+        }
+
         setContent {
             val isDark by viewModel.isDarkMode.collectAsState()
             com.example.smsaggregator.ui.theme.SmsAggregatorTheme(darkTheme = isDark) {
