@@ -81,38 +81,8 @@ fun M3HomeScreen(
     val monthTxns by viewModel.monthTxns.collectAsState()
     val recentTxns by viewModel.recentTxns.collectAsState()
 
-    val slices = remember(monthTxns, budgets, splitsByTxn) {
-        val catMap = mutableMapOf<String, Double>()
-        val cntMap = mutableMapOf<String, Int>()
-
-        // 1. Sum only money-out (DEBIT) rows as spending.
-        monthTxns.filter { it.isExpense }.forEach { t ->
-            val tSplits = splitsByTxn[t.id].orEmpty()
-            if (tSplits.isNotEmpty()) {
-                tSplits.filter { it.category != "Shared/Other" }.forEach { s ->
-                    val cat = if (s.category == "My Expense") t.category else s.category
-                    catMap[cat] = (catMap[cat] ?: 0.0) + s.amount
-                    cntMap[cat] = (cntMap[cat] ?: 0) + 1
-                }
-            } else {
-                catMap[t.category] = (catMap[t.category] ?: 0.0) + t.amount
-                cntMap[t.category] = (cntMap[t.category] ?: 0) + 1
-            }
-        }
-
-        // 2. Net refunds/cashback against the category they belong to — you didn't
-        //    really spend that money. Clamp each category at zero.
-        monthTxns.filter { it.isRefund }.forEach { t ->
-            if (catMap.containsKey(t.category)) {
-                catMap[t.category] = maxOf(0.0, (catMap[t.category] ?: 0.0) - t.amount)
-            }
-        }
-
-        catMap.entries.filter { it.value > 0 }.sortedByDescending { it.value }.map { (cat, spent) ->
-            CatSlice(cat, spent, budgets.find { it.category == cat }?.monthlyLimit ?: 0.0, CatColor.tone(cat), CatColor.bg(cat), CatColor.icon(cat), cntMap[cat] ?: 0)
-        }
-    }
-    val totalSpent = slices.sumOf { it.spent }
+    val slices by viewModel.ringSlices.collectAsState()
+    val totalSpent = remember(slices) { slices.sumOf { it.spent } }
     val monthIncome = remember(monthTxns) { monthTxns.filter { it.isIncome }.sumOf { it.amount } }
     val bills by viewModel.bills.collectAsState()
     val unpaidBills = remember(bills) { bills.filter { !it.isPaid }.sortedBy { it.dueDate } }
@@ -261,6 +231,14 @@ fun M3HomeScreen(
             // Ring Chart
             item {
                 val labelColor = MaterialTheme.colorScheme.onSurface.toArgb()
+                val density = androidx.compose.ui.platform.LocalDensity.current
+                val namePaint = remember(labelColor, density) {
+                    android.graphics.Paint().apply {
+                        isAntiAlias = true
+                        color = labelColor
+                        textSize = with(density) { 10.sp.toPx() }
+                    }
+                }
                 Box(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 24.dp), Alignment.Center) {
                     Box(Modifier.fillMaxWidth().height(280.dp), Alignment.Center) {
                         Canvas(
@@ -303,11 +281,6 @@ fun M3HomeScreen(
                             val radius = size.minDimension / 3.4f
                             drawCircle(color = Color.LightGray.copy(alpha = 0.2f), radius = radius, style = Stroke(sw))
                             if (totalSpent > 0) {
-                                val namePaint = android.graphics.Paint().apply {
-                                    isAntiAlias = true
-                                    color = labelColor
-                                    textSize = 10.sp.toPx()
-                                }
                                 var start = -90f
                                 slices.take(6).forEach { s ->
                                     val frac = (s.spent / totalSpent).toFloat()
@@ -530,10 +503,12 @@ fun BillCard(bill: com.example.smsaggregator.data.CreditCardBill, fmt: NumberFor
     }
 }
 
+private val iconShape = RoundedCornerShape(12.dp)
+
 @Composable
 fun TransactionItem(t: Transaction, displayAmount: Double, fmt: NumberFormat, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp, 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(40.dp).background(CatColor.bg(t.category), RoundedCornerShape(12.dp)), Alignment.Center) {
+        Box(Modifier.size(40.dp).background(CatColor.bg(t.category), iconShape), Alignment.Center) {
             Box(Modifier.size(16.dp).background(CatColor.tone(t.category), CircleShape))
         }
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {

@@ -28,12 +28,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.smsaggregator.ui.CatSlice
+import com.example.smsaggregator.ui.theme.CatColor
 
 enum class AuthState { LOADING, SIGNED_IN, SIGNED_OUT }
 
@@ -87,7 +90,7 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
 
     val splitsByTxn: StateFlow<Map<Long, List<com.example.smsaggregator.data.TransactionSplit>>> = _allSplits.map { splits ->
         splits.groupBy { it.transactionId }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     private val _isClassifying = MutableStateFlow(false)
     val isClassifying: StateFlow<Boolean> = _isClassifying.asStateFlow()
@@ -129,7 +132,7 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                 it.date >= monthRange.first && it.date < monthRange.second &&
                 (source == "All" || it.source == source)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val recentTxns: StateFlow<List<Transaction>> = combine(_transactions, _sourceFilter) { txns, selectedSource ->
         val source = selectedSource ?: "All"
@@ -137,7 +140,7 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             .filter { !it.isIgnored && (source == "All" || it.source == source) }
             .take(20)
             .toList()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _dateRangeFilter = MutableStateFlow<Pair<Long, Long>?>(null)
     val dateRangeFilter: StateFlow<Pair<Long, Long>?> = _dateRangeFilter.asStateFlow()
@@ -145,6 +148,35 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     // Budgets
     private val _budgets = MutableStateFlow<List<Budget>>(emptyList())
     val budgets: StateFlow<List<Budget>> = _budgets.asStateFlow()
+
+    val ringSlices: StateFlow<List<CatSlice>> = combine(monthTxns, budgets, splitsByTxn) { mTxns, b, splitsMap ->
+        val catMap = mutableMapOf<String, Double>()
+        val cntMap = mutableMapOf<String, Int>()
+
+        mTxns.filter { it.isExpense }.forEach { t ->
+            val tSplits = splitsMap[t.id].orEmpty()
+            if (tSplits.isNotEmpty()) {
+                tSplits.filter { it.category != "Shared/Other" }.forEach { s ->
+                    val cat = if (s.category == "My Expense") t.category else s.category
+                    catMap[cat] = (catMap[cat] ?: 0.0) + s.amount
+                    cntMap[cat] = (cntMap[cat] ?: 0) + 1
+                }
+            } else {
+                catMap[t.category] = (catMap[t.category] ?: 0.0) + t.amount
+                cntMap[t.category] = (cntMap[t.category] ?: 0) + 1
+            }
+        }
+
+        mTxns.filter { it.isRefund }.forEach { t ->
+            if (catMap.containsKey(t.category)) {
+                catMap[t.category] = maxOf(0.0, (catMap[t.category] ?: 0.0) - t.amount)
+            }
+        }
+
+        catMap.entries.filter { it.value > 0 }.sortedByDescending { it.value }.map { (cat, spent) ->
+            CatSlice(cat, spent, b.find { it.category == cat }?.monthlyLimit ?: 0.0, CatColor.tone(cat), CatColor.bg(cat), CatColor.icon(cat), cntMap[cat] ?: 0)
+        }
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _budgetPrediction = MutableStateFlow<String?>(null)
     val budgetPrediction: StateFlow<String?> = _budgetPrediction.asStateFlow()
