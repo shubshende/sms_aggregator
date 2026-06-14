@@ -25,6 +25,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.text.SimpleDateFormat
@@ -81,6 +85,10 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     private val _allSplits = MutableStateFlow<List<com.example.smsaggregator.data.TransactionSplit>>(emptyList())
     val allSplits: StateFlow<List<com.example.smsaggregator.data.TransactionSplit>> = _allSplits.asStateFlow()
 
+    val splitsByTxn: StateFlow<Map<Long, List<com.example.smsaggregator.data.TransactionSplit>>> = _allSplits.map { splits ->
+        splits.groupBy { it.transactionId }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     private val _isClassifying = MutableStateFlow(false)
     val isClassifying: StateFlow<Boolean> = _isClassifying.asStateFlow()
 
@@ -109,6 +117,19 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
 
     private val _sourceFilter = MutableStateFlow<String?>(null)
     val sourceFilter: StateFlow<String?> = _sourceFilter.asStateFlow()
+
+    val monthTxns: StateFlow<List<Transaction>> = combine(_transactions, _sourceFilter) { txns, selectedSource ->
+        val cal = Calendar.getInstance()
+        val curMonth = cal.get(Calendar.MONTH)
+        val curYear = cal.get(Calendar.YEAR)
+        val monthRange = com.example.smsaggregator.util.DateUtils.monthRange(curYear, curMonth)
+        val source = selectedSource ?: "All"
+        txns.filter {
+            !it.isIgnored &&
+                it.date >= monthRange.first && it.date < monthRange.second &&
+                (source == "All" || it.source == source)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _dateRangeFilter = MutableStateFlow<Pair<Long, Long>?>(null)
     val dateRangeFilter: StateFlow<Pair<Long, Long>?> = _dateRangeFilter.asStateFlow()

@@ -65,7 +65,8 @@ fun M3HomeScreen(
     val otherCount = remember(transactions) { transactions.count { it.category == "Other" } }
 
     var showManualEntry by remember { mutableStateOf(false) }
-    var selectedSource by remember { mutableStateOf("All") }
+    val selectedSource by viewModel.sourceFilter.collectAsState()
+    val displaySource = selectedSource ?: "All"
 
     // Search state — the search/filter UI lives in TransactionSearchScreen.
     var searchActive by remember { mutableStateOf(false) }
@@ -76,20 +77,10 @@ fun M3HomeScreen(
     var peekCategory by remember { mutableStateOf<String?>(null) }
     val haptic = LocalHapticFeedback.current
 
-    val allSplits by viewModel.allSplits.collectAsState()
-    // Precompute once (O(n)) instead of re-scanning the whole split list per transaction.
-    val splitsByTxn = remember(allSplits) { allSplits.groupBy { it.transactionId } }
+    val splitsByTxn by viewModel.splitsByTxn.collectAsState()
+    val monthTxns by viewModel.monthTxns.collectAsState()
 
-    val monthRange = remember(curYear, curMonth) { com.example.smsaggregator.util.DateUtils.monthRange(curYear, curMonth) }
-    val monthTxns = remember(transactions, selectedSource, monthRange) {
-        transactions.filter {
-            !it.isIgnored &&
-                it.date >= monthRange.first && it.date < monthRange.second &&
-                (selectedSource == "All" || it.source == selectedSource)
-        }
-    }
-
-    val slices = remember(monthTxns, budgets, allSplits) {
+    val slices = remember(monthTxns, budgets, splitsByTxn) {
         val catMap = mutableMapOf<String, Double>()
         val cntMap = mutableMapOf<String, Int>()
 
@@ -428,8 +419,8 @@ fun M3HomeScreen(
                 ) {
                     sources.forEach { source ->
                         FilterChip(
-                            selected = selectedSource == source,
-                            onClick = { selectedSource = source },
+                            selected = displaySource == source,
+                            onClick = { viewModel.setSourceFilter(source) },
                             label = { Text(source) },
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -441,7 +432,7 @@ fun M3HomeScreen(
             item {
                 Text("Recent", Modifier.padding(24.dp, 8.dp, 24.dp, 12.dp), fontSize = 18.sp, fontWeight = FontWeight.Medium)
             }
-            val filteredTransactions = transactions.filter { if (selectedSource == "All") true else it.source == selectedSource }
+            val filteredTransactions = transactions.filter { if (displaySource == "All") true else it.source == displaySource }
             if (filteredTransactions.isEmpty()) {
                 item {
                     Column(
@@ -451,7 +442,7 @@ fun M3HomeScreen(
                         Icon(Icons.Outlined.ReceiptLong, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            if (selectedSource == "All") "No transactions yet" else "No transactions for this source",
+                            if (displaySource == "All") "No transactions yet" else "No transactions for this source",
                             fontSize = 15.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(Modifier.height(4.dp))
