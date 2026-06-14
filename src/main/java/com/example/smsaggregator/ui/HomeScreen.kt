@@ -432,7 +432,7 @@ fun M3HomeScreen(
             item {
                 Text("Recent", Modifier.padding(24.dp, 8.dp, 24.dp, 12.dp), fontSize = 18.sp, fontWeight = FontWeight.Medium)
             }
-            val filteredTransactions = transactions.filter { if (displaySource == "All") true else it.source == displaySource }
+            val filteredTransactions = transactions
             if (filteredTransactions.isEmpty()) {
                 item {
                     Column(

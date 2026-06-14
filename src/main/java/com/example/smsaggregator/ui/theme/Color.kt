@@ -52,7 +52,11 @@ object CatColor {
     val other    = Color(0xFF8A7A30)
     val otherBg  = Color(0xFF2E2A18)
 
-    fun tone(cat: String): Color = when {
+    private val toneCache = java.util.concurrent.ConcurrentHashMap<String, Color>()
+    private val bgCache = java.util.concurrent.ConcurrentHashMap<String, Color>()
+    private val iconCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    fun tone(cat: String): Color = toneCache.getOrPut(cat) { when {
         cat.contains("Income", true) -> Color(0xFF2E7D32)
         cat.contains("Transfer", true) -> Color(0xFF607D8B)
         cat.contains("Food", true) || cat.contains("Dining", true) -> food
@@ -64,9 +68,9 @@ object CatColor {
         cat.contains("Health", true) || cat.contains("Fitness", true) || cat.contains("Insurance", true) -> health
         cat.contains("Invest", true) || cat.contains("EMI", true) -> Color(0xFF4A90D9)
         else -> other
-    }
+    } }
 
-    fun bg(cat: String): Color = when {
+    fun bg(cat: String): Color = bgCache.getOrPut(cat) { when {
         cat.contains("Food", true) || cat.contains("Dining", true) -> foodBg
         cat.contains("Transport", true) || cat.contains("Travel", true) || cat.contains("Fuel", true) -> transBg
         cat.contains("Grocer", true) -> grocBg
@@ -75,9 +79,9 @@ object CatColor {
         cat.contains("Entertain", true) || cat.contains("Subscript", true) -> subsBg
         cat.contains("Health", true) || cat.contains("Fitness", true) || cat.contains("Insurance", true) -> healthBg
         else -> otherBg
-    }
+    } }
 
-    fun icon(cat: String): String = when {
+    fun icon(cat: String): String = iconCache.getOrPut(cat) { when {
         cat.contains("Income", true) -> "💰"
         cat.contains("Transfer", true) -> "🔄"
         cat.contains("Food", true) || cat.contains("Dining", true) -> "☕"
@@ -93,5 +97,5 @@ object CatColor {
         cat.contains("Govern", true) -> "🏛️"
         cat.contains("Educat", true) -> "📚"
         else -> "⚫"
-    }
+    } }
 }
