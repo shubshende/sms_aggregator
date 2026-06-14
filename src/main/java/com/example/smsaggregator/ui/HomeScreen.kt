@@ -62,7 +62,7 @@ fun M3HomeScreen(
     val curYear = cal.get(Calendar.YEAR)
     val userProfile by viewModel.userProfile.collectAsState()
     val isClassifying by viewModel.isClassifying.collectAsState()
-    val otherCount = remember(transactions) { transactions.count { it.category == "Other" } }
+
 
     var showManualEntry by remember { mutableStateOf(false) }
     val selectedSource by viewModel.sourceFilter.collectAsState()
