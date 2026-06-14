@@ -131,6 +131,14 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val recentTxns: StateFlow<List<Transaction>> = combine(_transactions, _sourceFilter) { txns, selectedSource ->
+        val source = selectedSource ?: "All"
+        txns.asSequence()
+            .filter { !it.isIgnored && (source == "All" || it.source == source) }
+            .take(20)
+            .toList()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val _dateRangeFilter = MutableStateFlow<Pair<Long, Long>?>(null)
     val dateRangeFilter: StateFlow<Pair<Long, Long>?> = _dateRangeFilter.asStateFlow()
 

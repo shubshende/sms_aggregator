@@ -79,6 +79,7 @@ fun M3HomeScreen(
 
     val splitsByTxn by viewModel.splitsByTxn.collectAsState()
     val monthTxns by viewModel.monthTxns.collectAsState()
+    val recentTxns by viewModel.recentTxns.collectAsState()
 
     val slices = remember(monthTxns, budgets, splitsByTxn) {
         val catMap = mutableMapOf<String, Double>()
@@ -432,8 +433,7 @@ fun M3HomeScreen(
             item {
                 Text("Recent", Modifier.padding(24.dp, 8.dp, 24.dp, 12.dp), fontSize = 18.sp, fontWeight = FontWeight.Medium)
             }
-            val filteredTransactions = transactions
-            if (filteredTransactions.isEmpty()) {
+            if (recentTxns.isEmpty()) {
                 item {
                     Column(
                         Modifier.fillMaxWidth().padding(32.dp, 24.dp),
@@ -466,7 +466,7 @@ fun M3HomeScreen(
                     }
                 }
             } else {
-                items(filteredTransactions.take(20), key = { it.id }) { t ->
+                items(recentTxns, key = { it.id }) { t ->
                     val tSplits = splitsByTxn[t.id].orEmpty()
                     val displayAmount = if (tSplits.isNotEmpty()) {
                         tSplits.filter { it.category != "Shared/Other" }.sumOf { it.amount }
