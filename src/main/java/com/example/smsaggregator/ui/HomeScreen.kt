@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,7 +44,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class CatSlice(val name: String, val spent: Double, val budget: Double, val color: Color, val bg: Color, val icon: String, val count: Int, val label: String)
+data class CatSlice(val name: String, val spent: Double, val budget: Double, val color: Color, val bg: Color, val icon: String, val count: Int, val label: String = "")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +82,10 @@ fun M3HomeScreen(
     val monthTxns by viewModel.monthTxns.collectAsState()
     val recentTxns by viewModel.recentTxns.collectAsState()
 
-    val slices by viewModel.ringSlices.collectAsState()
+    val ringData by viewModel.ringData.collectAsState()
+    val slices = remember(ringData) {
+        ringData.map { d -> CatSlice(d.name, d.spent, d.budget, CatColor.tone(d.name), CatColor.bg(d.name), CatColor.icon(d.name), d.count, d.label) }
+    }
     val totalSpent = remember(slices) { slices.sumOf { it.spent } }
     val monthIncome = remember(monthTxns) { monthTxns.filter { it.isIncome }.sumOf { it.amount } }
     val bills by viewModel.bills.collectAsState()
@@ -212,9 +216,9 @@ fun M3HomeScreen(
                             if (isScanning) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             else Icon(Icons.Outlined.Refresh, "Scan SMS", tint = MaterialTheme.colorScheme.onSurface)
                         }
-                        IconButton(onClick = onSearchClick) {
+                        IconButton(onClick = { searchActive = true }) {
                             Box {
-                                Icon(Icons.Rounded.Search, "Search", tint = MaterialTheme.colorScheme.onSurface)
+                                Icon(Icons.Outlined.Search, "Search", tint = MaterialTheme.colorScheme.onSurface)
                                 if (otherCount > 0) {
                                     Box(
                                         Modifier

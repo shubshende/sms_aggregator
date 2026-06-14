@@ -98,7 +98,7 @@ fun BudgetsScreen(
             val budgetObj = budgets.find { it.category == cat }
             val limit = budgetObj?.monthlyLimit ?: 0.0
             val rollover = if (isCurrentMonth) budgetObj?.rolloverAmount ?: 0.0 else 0.0
-            CatSlice(cat, spent, limit + rollover, CatColor.tone(cat), CatColor.bg(cat), CatColor.icon(cat), countMap[cat] ?: 0, "")
+            CatSlice(cat, spent, limit + rollover, CatColor.tone(cat), CatColor.bg(cat), CatColor.icon(cat), countMap[cat] ?: 0)
         }.sortedByDescending { it.spent }
     }
 

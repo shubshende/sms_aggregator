@@ -35,8 +35,6 @@ import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.example.smsaggregator.ui.CatSlice
-import com.example.smsaggregator.ui.theme.CatColor
 
 enum class AuthState { LOADING, SIGNED_IN, SIGNED_OUT }
 
@@ -48,6 +46,7 @@ data class UserProfile(
 
 data class AiReportItem(val merchant: String, val category: String, val sms: String, val isSorted: Boolean)
 data class AiReport(val items: List<AiReportItem>)
+data class RingSliceData(val name: String, val spent: Double, val budget: Double, val count: Int, val label: String)
 
 class TransactionViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -149,7 +148,7 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     private val _budgets = MutableStateFlow<List<Budget>>(emptyList())
     val budgets: StateFlow<List<Budget>> = _budgets.asStateFlow()
 
-    val ringSlices: StateFlow<List<CatSlice>> = combine(monthTxns, budgets, splitsByTxn) { mTxns, b, splitsMap ->
+    val ringData: StateFlow<List<RingSliceData>> = combine(monthTxns, budgets, splitsByTxn) { mTxns, b, splitsMap ->
         val catMap = mutableMapOf<String, Double>()
         val cntMap = mutableMapOf<String, Int>()
 
@@ -180,7 +179,7 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             val pct = if (totalSpent > 0) Math.round((spent / totalSpent) * 100).toInt() else 0
             val shortName = if (cat.length > 11) cat.take(10) + "…" else cat
             val label = "$shortName  $pct%"
-            CatSlice(cat, spent, b.find { it.category == cat }?.monthlyLimit ?: 0.0, CatColor.tone(cat), CatColor.bg(cat), CatColor.icon(cat), cntMap[cat] ?: 0, label)
+            RingSliceData(cat, spent, b.find { it.category == cat }?.monthlyLimit ?: 0.0, cntMap[cat] ?: 0, label)
         }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
