@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "C:\\Users\\shubs\\.gradle\\daemon\\8.7\\com.example.smsaggregator-debug-60:\\mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\shubs\\.gradle\\daemon\\8.7\\com.example.smsaggregator-main-62:\\mipmap-xxxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "com.example.smsaggregator-debug-60:/xml_expense_widget_info.xml.flat",
+        "source": "com.example.smsaggregator-main-62:/xml/expense_widget_info.xml"
+    },
+    {
+        "merged": "com.example.smsaggregator-debug-60:/layout_widget_expense.xml.flat",
+        "source": "com.example.smsaggregator-main-62:/layout/widget_expense.xml"
+    },
+    {
+        "merged": "C:\\Users\\shubs\\.gradle\\daemon\\8.7\\com.example.smsaggregator-debug-60:\\mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\shubs\\.gradle\\daemon\\8.7\\com.example.smsaggregator-main-62:\\mipmap-xxxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\shubs\\.gradle\\daemon\\8.7\\com.example.smsaggregator-debug-60:\\xml_file_paths.xml.flat",
+        "source": "C:\\Users\\shubs\\.gradle\\daemon\\8.7\\com.example.smsaggregator-main-62:\\xml\\file_paths.xml"
+    }
+]

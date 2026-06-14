@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Agg — Icon explorations</title>
+<style>
+  :root { --cream:#fbf8f1; --ink:#1d1a14; --muted:#665f52; --container:#f3eee3; }
+  html,body { margin:0; padding:0; background:var(--container); color:var(--ink); font-family:"Roboto Flex","Roboto",system-ui,-apple-system,sans-serif; }
+  .wrap { max-width:1280px; margin:0 auto; padding:48px 32px 100px; }
+  h1 { font-size:40px; font-weight:400; letter-spacing:-0.8px; margin:0 0 8px; }
+  .sub { color:var(--muted); font-size:15px; margin-bottom:40px; max-width:640px; line-height:1.5; }
+  .eyebrow { text-transform:uppercase; letter-spacing:1.4px; font-size:11px; font-weight:600; color:var(--muted); margin:52px 0 18px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:28px; }
+  .card { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .ico { width:180px; height:180px; border-radius:44px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.06); background:#fff; }
+  .label { font-size:14px; font-weight:500; color:var(--ink); }
+  .desc { font-size:12px; color:var(--muted); text-align:center; max-width:200px; line-height:1.45; margin-top:-6px; }
+  .row-ladder { display:flex; gap:18px; align-items:flex-end; flex-wrap:wrap; margin-top:18px; }
+  .ladder-item { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .ladder-item .lb { font-size:11px; color:var(--muted); }
+  .phone { width:300px; background:#0e0c0a; border-radius:38px; padding:14px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+  .phone-screen { background:#141210; border-radius:26px; padding:28px 18px 24px; color:#f1ece3; }
+  .phone-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px 10px; margin-top:8px; }
+  .phone-app { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .phone-app .ic { width:52px; height:52px; border-radius:14px; box-shadow:0 2px 6px rgba(0,0,0,.4); overflow:hidden; }
+  .phone-app .lb { font-size:10px; opacity:.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Agg — app icon</h1>
+  <div class="sub">Six directions for the expense tracker icon. Each lives inside the app's warm‑amber palette (<code>#8A5A1C</code> primary) and reads clearly at 48px.</div>
+
+  <div class="eyebrow">Six concepts · 512×512 adaptive</div>
+  <div class="grid">
+
+    <!-- 1. Stacked coins -->
+    <div class="card">
+      <div class="ico">
+        <svg viewBox="0 0 108 108" width="180" height="180">
+          <defs>
+            <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6B8"/><stop offset="1" stop-color="#F3C97E"/></linearGradient>
+            <radialGradient id="c1a" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#B8761F"/><stop offset="1" stop-color="#6E4110"/></radialGradient>
+            <radialGradient id="c1b" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#E8C37A"/><stop offset="1" stop-color="#B8761F"/></radialGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#bg1)"/>
+          <ellipse cx="54" cy="74" rx="30" ry="8" fill="#2E1C00" opacity=".18"/>
+          <circle cx="54" cy="62" r="30" fill="url(#c1a)"/>
+          <circle cx="46" cy="42" r="22" fill="url(#c1b)"/>
+          <circle cx="46" cy="42" r="7.5" fill="#FBF8F1"/>
+        </svg>
+      </div>
+      <div class="label">01 · Stacked coins</div>
+      <div class="desc">Two disks like coins piling up — the tracking act. Counter-cut reads as 'a'.</div>
+    </div>
+
+    <!-- 2. Donut / ring chart -->
+    <div class="card">
+      <div class="ico">
+        <svg viewBox="0 0 108 108" width="180" height="180">
+          <defs>
+            <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF3D7"/><stop offset="1" stop-color="#FBEAC2"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#bg2)"/>
+          <!-- donut segments -->
+          <g transform="translate(54 54)">
+            <!-- use circle strokes with dasharray for segments, r=30, C=188.5 -->
+            <circle r="30" fill="none" stroke="#E6DFCD" stroke-width="14"/>
+            <circle r="30" fill="none" stroke="#8A5A1C" stroke-width="14" stroke-dasharray="62 127" stroke-dashoffset="0" transform="rotate(-90)"/>
+            <circle r="30" fill="none" stroke="#C97A2A" stroke-width="14" stroke-dasharray="40 149" stroke-dashoffset="-62" transform="rotate(-90)"/>
+            <circle r="30" fill="none" stroke="#E8C37A" stroke-width="14" stroke-dasharray="30 159" stroke-dashoffset="-102" transform="rotate(-90)"/>
+            <circle r="30" fill="none" stroke="#6E4110" stroke-width="14" stroke-dasharray="56 133" stroke-dashoffset="-132" transform="rotate(-90)"/>
+          </g>
+          <!-- center rupee -->
+          <text x="54" y="62" text-anchor="middle" font-family="Roboto Flex, Roboto, serif" font-size="22" font-weight="600" fill="#2E1C00">₹</text>
+        </svg>
+      </div>
+      <div class="label">02 · Breakdown ring</div>
+      <div class="desc">The hero chart from the home screen, compressed into a mark. Category story baked in.</div>
+    </div>
+
+    <!-- 3. Wordmark 'a' -->
+    <div class="card">
+      <div class="ico">
+        <svg viewBox="0 0 108 108" width="180" height="180">
+          <defs>
+            <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A6661E"/><stop offset="1" stop-color="#5E3808"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#bg3)"/>
+          <!-- custom 'a' -->
+          <g transform="translate(26 28)" fill="#FFE6B8">
+            <!-- bowl -->
+            <path d="M28 0C13 0 4 10 4 26c0 15 9 26 24 26 7 0 13-2 17-6v4h12V26C57 10 45 0 28 0zm0 12c9 0 16 5 16 14v12c-3 4-9 6-15 6-9 0-14-5-14-13 0-9 5-19 13-19z"/>
+          </g>
+        </svg>
+      </div>
+      <div class="label">03 · Wordmark 'a'</div>
+      <div class="desc">Bold lowercase 'a' for Agg. Dark amber on cream — distinctive at any size.</div>
+    </div>
+
+    <!-- 4. Bar chart -->
+    <div class="card">
+      <div class="ico">
+        <svg viewBox="0 0 108 108" width="180" height="180">
+          <defs>
+            <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6B8"/><stop offset="1" stop-color="#E8C37A"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#bg4)"/>
+          <!-- rising bars -->
+          <g>
+            <rect x="24" y="62" width="12" height="22" rx="4" fill="#6E4110"/>
+            <rect x="42" y="50" width="12" height="34" rx="4" fill="#8A5A1C"/>
+            <rect x="60" y="36" width="12" height="48" rx="4" fill="#B8761F"/>
+            <rect x="78" y="22" width="12" height="62" rx="4" fill="#2E1C00"/>
+          </g>
+          <!-- baseline -->
+          <rect x="20" y="86" width="74" height="3" rx="1.5" fill="#2E1C00" opacity=".5"/>
+        </svg>
+      </div>
+      <div class="label">04 · Rising bars</div>
+      <div class="desc">The monthly trend chart. Classic, data-forward, understandable immediately.</div>
+    </div>
+
+    <!-- 5. Rupee ligature -->
+    <div class="card">
+      <div class="ico">
+        <svg viewBox="0 0 108 108" width="180" height="180">
+          <defs>
+            <radialGradient id="bg5" cx="0.3" cy="0.3" r="1"><stop offset="0" stop-color="#FFD993"/><stop offset="1" stop-color="#C88A35"/></radialGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#bg5)"/>
+          <!-- rupee glyph, hand-shaped -->
+          <g fill="#2E1C00" transform="translate(35 24)">
+            <rect x="0" y="0" width="38" height="7" rx="3"/>
+            <rect x="0" y="12" width="38" height="7" rx="3"/>
+            <path d="M6 22h14c9 0 16 6 16 16s-7 16-16 16H12l18 22h-12L0 54h14c7 0 11-4 11-10s-4-10-11-10H6v-12z"/>
+          </g>
+        </svg>
+      </div>
+      <div class="label">05 · Rupee mark</div>
+      <div class="desc">Locale-first — the ₹ glyph as centerpiece. Reads instantly as money.</div>
+    </div>
+
+    <!-- 6. Receipt fold -->
+    <div class="card">
+      <div class="ico">
+        <svg viewBox="0 0 108 108" width="180" height="180">
+          <defs>
+            <linearGradient id="bg6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBEAC2"/><stop offset="1" stop-color="#F3C97E"/></linearGradient>
+          </defs>
+          <rect width="108" height="108" fill="url(#bg6)"/>
+          <!-- receipt with zig-zag bottom -->
+          <g transform="translate(32 22)">
+            <path d="M0 0h44v58l-5 -4 -5 4 -6 -4 -6 4 -6 -4 -5 4 -5 -4 -6 4z" fill="#FBF8F1" stroke="#6E4110" stroke-width="2.5" stroke-linejoin="round"/>
+            <!-- lines -->
+            <rect x="7" y="11" width="22" height="3.5" rx="1.5" fill="#6E4110"/>
+            <rect x="7" y="20" width="30" height="3.5" rx="1.5" fill="#B8761F"/>
+            <rect x="7" y="29" width="18" height="3.5" rx="1.5" fill="#B8761F"/>
+            <!-- total -->
+            <rect x="7" y="40" width="30" height="5" rx="1.5" fill="#8A5A1C"/>
+          </g>
+        </svg>
+      </div>
+      <div class="label">06 · Receipt</div>
+      <div class="desc">A tiny receipt with its characteristic tear. Literal, friendly, universally readable.</div>
+    </div>
+
+  </div>
+
+  <div class="eyebrow">Home‑screen scale test · all six</div>
+  <div class="phone">
+    <div class="phone-screen">
+      <div style="font-size:11px;opacity:.5;text-align:center;letter-spacing:1.2px;text-transform:uppercase;">9:30 · Tuesday</div>
+      <div class="phone-grid">
+        <div class="phone-app"><div class="ic" style="background:#1976d2;"></div><div class="lb">Cal</div></div>
+        <div class="phone-app"><div class="ic"><svg viewBox="0 0 108 108" width="52" height="52"><defs><linearGradient id="pa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6B8"/><stop offset="1" stop-color="#F3C97E"/></linearGradient><radialGradient id="paa" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#B8761F"/><stop offset="1" stop-color="#6E4110"/></radialGradient><radialGradient id="pab" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#E8C37A"/><stop offset="1" stop-color="#B8761F"/></radialGradient></defs><rect width="108" height="108" fill="url(#pa)"/><ellipse cx="54" cy="74" rx="30" ry="8" fill="#2E1C00" opacity=".18"/><circle cx="54" cy="62" r="30" fill="url(#paa)"/><circle cx="46" cy="42" r="22" fill="url(#pab)"/><circle cx="46" cy="42" r="7.5" fill="#FBF8F1"/></svg></div><div class="lb" style="font-weight:600;opacity:1;">01</div></div>
+        <div class="phone-app"><div class="ic"><svg viewBox="0 0 108 108" width="52" height="52"><rect width="108" height="108" fill="#FFF3D7"/><g transform="translate(54 54)"><circle r="30" fill="none" stroke="#E6DFCD" stroke-width="14"/><circle r="30" fill="none" stroke="#8A5A1C" stroke-width="14" stroke-dasharray="62 127" transform="rotate(-90)"/><circle r="30" fill="none" stroke="#C97A2A" stroke-width="14" stroke-dasharray="40 149" stroke-dashoffset="-62" transform="rotate(-90)"/><circle r="30" fill="none" stroke="#E8C37A" stroke-width="14" stroke-dasharray="30 159" stroke-dashoffset="-102" transform="rotate(-90)"/><circle r="30" fill="none" stroke="#6E4110" stroke-width="14" stroke-dasharray="56 133" stroke-dashoffset="-132" transform="rotate(-90)"/></g><text x="54" y="62" text-anchor="middle" font-size="22" font-weight="600" fill="#2E1C00">₹</text></svg></div><div class="lb" style="font-weight:600;opacity:1;">02</div></div>
+        <div class="phone-app"><div class="ic"><svg viewBox="0 0 108 108" width="52" height="52"><defs><linearGradient id="pb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A6661E"/><stop offset="1" stop-color="#5E3808"/></linearGradient></defs><rect width="108" height="108" fill="url(#pb)"/><g transform="translate(26 28)" fill="#FFE6B8"><path d="M28 0C13 0 4 10 4 26c0 15 9 26 24 26 7 0 13-2 17-6v4h12V26C57 10 45 0 28 0zm0 12c9 0 16 5 16 14v12c-3 4-9 6-15 6-9 0-14-5-14-13 0-9 5-19 13-19z"/></g></svg></div><div class="lb" style="font-weight:600;opacity:1;">03</div></div>
+        <div class="phone-app"><div class="ic"><svg viewBox="0 0 108 108" width="52" height="52"><defs><linearGradient id="pc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6B8"/><stop offset="1" stop-color="#E8C37A"/></linearGradient></defs><rect width="108" height="108" fill="url(#pc)"/><rect x="24" y="62" width="12" height="22" rx="4" fill="#6E4110"/><rect x="42" y="50" width="12" height="34" rx="4" fill="#8A5A1C"/><rect x="60" y="36" width="12" height="48" rx="4" fill="#B8761F"/><rect x="78" y="22" width="12" height="62" rx="4" fill="#2E1C00"/><rect x="20" y="86" width="74" height="3" rx="1.5" fill="#2E1C00" opacity=".5"/></svg></div><div class="lb" style="font-weight:600;opacity:1;">04</div></div>
+        <div class="phone-app"><div class="ic"><svg viewBox="0 0 108 108" width="52" height="52"><defs><radialGradient id="pd" cx="0.3" cy="0.3" r="1"><stop offset="0" stop-color="#FFD993"/><stop offset="1" stop-color="#C88A35"/></radialGradient></defs><rect width="108" height="108" fill="url(#pd)"/><g fill="#2E1C00" transform="translate(35 24)"><rect x="0" y="0" width="38" height="7" rx="3"/><rect x="0" y="12" width="38" height="7" rx="3"/><path d="M6 22h14c9 0 16 6 16 16s-7 16-16 16H12l18 22h-12L0 54h14c7 0 11-4 11-10s-4-10-11-10H6v-12z"/></g></svg></div><div class="lb" style="font-weight:600;opacity:1;">05</div></div>
+        <div class="phone-app"><div class="ic"><svg viewBox="0 0 108 108" width="52" height="52"><defs><linearGradient id="pe" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBEAC2"/><stop offset="1" stop-color="#F3C97E"/></linearGradient></defs><rect width="108" height="108" fill="url(#pe)"/><g transform="translate(32 22)"><path d="M0 0h44v58l-5 -4 -5 4 -6 -4 -6 4 -6 -4 -5 4 -5 -4 -6 4z" fill="#FBF8F1" stroke="#6E4110" stroke-width="2.5" stroke-linejoin="round"/><rect x="7" y="11" width="22" height="3.5" rx="1.5" fill="#6E4110"/><rect x="7" y="20" width="30" height="3.5" rx="1.5" fill="#B8761F"/><rect x="7" y="29" width="18" height="3.5" rx="1.5" fill="#B8761F"/><rect x="7" y="40" width="30" height="5" rx="1.5" fill="#8A5A1C"/></g></svg></div><div class="lb" style="font-weight:600;opacity:1;">06</div></div>
+        <div class="phone-app"><div class="ic" style="background:#25d366;"></div><div class="lb">WA</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:48px;font-size:13px;color:var(--muted);max-width:680px;line-height:1.6;">
+    <b>Recommendation:</b> <b>02 · Breakdown ring</b> or <b>03 · Wordmark 'a'</b> — the ring doubles as a mini data-viz that mirrors the home screen hero, while the wordmark is the most distinctive and bold at any size. Let me know which to take forward and I'll export it as adaptive icon XML for Android (foreground + background layers).
+  </div>
+</div>
+</body>
+</html>

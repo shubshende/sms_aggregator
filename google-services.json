@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "251816121027",
+    "project_id": "smsaggregator-16283",
+    "storage_bucket": "smsaggregator-16283.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:251816121027:android:8165c9534be2e3a1098876",
+        "android_client_info": {
+          "package_name": "com.example.smsaggregator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "251816121027-ictlvi3474u592gv42kjuq2v5ksrphvr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smsaggregator",
+            "certificate_hash": "f1f665c872ddd78212578256e24bf0ab390798a4"
+          }
+        },
+        {
+          "client_id": "251816121027-olphg5r63intgah4mlnlvd2b8elu34jo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPKliaLuq5uWGjq4dBuAue4B6z10lZymw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "251816121027-olphg5r63intgah4mlnlvd2b8elu34jo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

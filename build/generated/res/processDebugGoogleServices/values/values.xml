@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">251816121027-olphg5r63intgah4mlnlvd2b8elu34jo.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">251816121027</string>
+    <string name="google_api_key" translatable="false">AIzaSyAPKliaLuq5uWGjq4dBuAue4B6z10lZymw</string>
+    <string name="google_app_id" translatable="false">1:251816121027:android:8165c9534be2e3a1098876</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAPKliaLuq5uWGjq4dBuAue4B6z10lZymw</string>
+    <string name="google_storage_bucket" translatable="false">smsaggregator-16283.firebasestorage.app</string>
+    <string name="project_id" translatable="false">smsaggregator-16283</string>
+</resources>
