@@ -11,6 +11,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.smsaggregator.data.AppDatabase
 import com.example.smsaggregator.data.AuthRepository
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.example.smsaggregator.data.Budget
 import com.example.smsaggregator.data.FirestoreSync
 import com.example.smsaggregator.data.MerchantOverride
@@ -113,6 +117,11 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     // Search & Filters
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    // Calendar UI State
+    var calendarMonth by mutableIntStateOf(Calendar.getInstance().get(Calendar.MONTH))
+    var calendarYear by mutableIntStateOf(Calendar.getInstance().get(Calendar.YEAR))
+    var calendarDay by mutableStateOf<Int?>(null)
 
     private val _quickFilter = MutableStateFlow<String?>(null)
     val quickFilter: StateFlow<String?> = _quickFilter.asStateFlow()
@@ -265,27 +274,33 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
 
-        // One-time self-heal (v9): re-tag already-stored credit-card bill payments and
-        // self-transfers so they stop double-counting in spend. Only flips the new
-        // isTransfer flag — never touches user-corrected categories. Runs once.
+        // One-time self-heal (v13): re-tag already-stored credit-card bill payments and
+        // self-transfers, AND delete any transactions that are now recognized as noise
+        // (statements, bounced, held, promos) by the updated parser.
         viewModelScope.launch(Dispatchers.IO) {
             val prefs = getApplication<Application>()
                 .getSharedPreferences("sms_agg_prefs", Context.MODE_PRIVATE)
-            if (!prefs.getBoolean("transfer_retag_v9_done", false)) {
+            if (!prefs.getBoolean("transfer_retag_v13_done", false)) {
                 try {
                     transactionDao.getAllTransactionsList().forEach { txn ->
                         if (txn.rawSms.isNotBlank()) {
-                            val shouldBeTransfer =
-                                com.example.smsaggregator.logic.SmsParser.isTransferSms(txn.rawSms)
-                            if (shouldBeTransfer && !txn.isTransfer) {
-                                transactionDao.updateTransfer(txn.id, true)
+                            // 1. Check if it should be deleted entirely (noise/statement)
+                            val parsed = com.example.smsaggregator.logic.SmsParser.parseSms(txn.rawSms, "AD-HDFCBK", txn.date)
+                            if (parsed == null) {
+                                transactionDao.deleteTransaction(txn)
+                            } else {
+                                // 2. Check if it's a transfer and tag it
+                                val shouldBeTransfer = com.example.smsaggregator.logic.SmsParser.isTransferSms(txn.rawSms)
+                                if (shouldBeTransfer && !txn.isTransfer) {
+                                    transactionDao.updateTransfer(txn.id, true)
+                                }
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("TransactionVM", "Transfer re-tag failed", e)
+                    Log.e("TransactionVM", "Transfer re-tag/re-parse failed", e)
                 }
-                prefs.edit().putBoolean("transfer_retag_v9_done", true).apply()
+                prefs.edit().putBoolean("transfer_retag_v13_done", true).apply()
             }
         }
 
@@ -398,6 +413,12 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                     firestoreSync.uploadTransaction(uid, updated)
                 }
             }
+        }
+    }
+
+    fun updateNote(transactionId: Long, note: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            transactionDao.updateNote(transactionId, note)
         }
     }
 

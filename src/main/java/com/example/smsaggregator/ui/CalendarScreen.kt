@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smsaggregator.data.Transaction
 import com.example.smsaggregator.data.isExpense
+import com.example.smsaggregator.data.isIncome
 import com.example.smsaggregator.data.isRefund
 import com.example.smsaggregator.ui.theme.CatColor
 import com.example.smsaggregator.ui.theme.Dark_SurfCont
@@ -40,20 +42,20 @@ fun CalendarScreen(
     onTransactionClick: (Transaction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedMonth by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.MONTH)) }
-    var selectedYear by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
-    var selectedDay by remember { mutableStateOf<Int?>(null) }
+    
+    
+    
     val fmt = remember { NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply { maximumFractionDigits = 0 } }
     val allSplits by viewModel.allSplits.collectAsState()
     val splitsByTxn = remember(allSplits) { allSplits.groupBy { it.transactionId } }
     val bills by viewModel.bills.collectAsState()
 
     val cal = remember { Calendar.getInstance() }
-    cal.set(Calendar.YEAR, selectedYear); cal.set(Calendar.MONTH, selectedMonth); cal.set(Calendar.DAY_OF_MONTH, 1)
+    cal.set(Calendar.YEAR, viewModel.calendarYear); cal.set(Calendar.MONTH, viewModel.calendarMonth); cal.set(Calendar.DAY_OF_MONTH, 1)
 
     val nowCal = Calendar.getInstance()
     val today = nowCal.get(Calendar.DAY_OF_MONTH)
-    val monthRange = remember(selectedYear, selectedMonth) { com.example.smsaggregator.util.DateUtils.monthRange(selectedYear, selectedMonth) }
+    val monthRange = remember(viewModel.calendarYear, viewModel.calendarMonth) { com.example.smsaggregator.util.DateUtils.monthRange(viewModel.calendarYear, viewModel.calendarMonth) }
     val monthTxns = remember(transactions, monthRange) {
         transactions.filter { it.date >= monthRange.first && it.date < monthRange.second }
     }
@@ -64,14 +66,14 @@ fun CalendarScreen(
 
     val monthNames = arrayOf("January","February","March","April","May","June","July","August","September","October","November","December")
 
-    val dayTxns = remember(selectedDay, monthTxns) {
-        if (selectedDay == null) emptyList()
-        else monthTxns.filter { val c = Calendar.getInstance(); c.timeInMillis = it.date; c.get(Calendar.DAY_OF_MONTH) == selectedDay }
+    val dayTxns = remember(viewModel.calendarDay, monthTxns) {
+        if (viewModel.calendarDay == null) emptyList()
+        else monthTxns.filter { val c = Calendar.getInstance(); c.timeInMillis = it.date; c.get(Calendar.DAY_OF_MONTH) == viewModel.calendarDay }
     }
 
-    val dayBills = remember(selectedDay, monthBills) {
-        if (selectedDay == null) emptyList()
-        else monthBills.filter { val c = Calendar.getInstance(); c.timeInMillis = it.dueDate; c.get(Calendar.DAY_OF_MONTH) == selectedDay }
+    val dayBills = remember(viewModel.calendarDay, monthBills) {
+        if (viewModel.calendarDay == null) emptyList()
+        else monthBills.filter { val c = Calendar.getInstance(); c.timeInMillis = it.dueDate; c.get(Calendar.DAY_OF_MONTH) == viewModel.calendarDay }
     }
 
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
@@ -93,12 +95,12 @@ fun CalendarScreen(
                         if (dragAccumulator != Float.MAX_VALUE && dragAccumulator != Float.MIN_VALUE) {
                             dragAccumulator += dragAmount
                             if (dragAccumulator > 150f) {
-                                if (selectedMonth == 0) { selectedMonth = 11; selectedYear-- } else selectedMonth--
-                                selectedDay = null
+                                if (viewModel.calendarMonth == 0) { viewModel.calendarMonth = 11; viewModel.calendarYear-- } else viewModel.calendarMonth--
+                                viewModel.calendarDay = null
                                 dragAccumulator = Float.MAX_VALUE
                             } else if (dragAccumulator < -150f) {
-                                if (selectedMonth == 11) { selectedMonth = 0; selectedYear++ } else selectedMonth++
-                                selectedDay = null
+                                if (viewModel.calendarMonth == 11) { viewModel.calendarMonth = 0; viewModel.calendarYear++ } else viewModel.calendarMonth++
+                                viewModel.calendarDay = null
                                 dragAccumulator = Float.MIN_VALUE
                             }
                         }
@@ -109,7 +111,7 @@ fun CalendarScreen(
     ) {
         item {
             androidx.compose.animation.AnimatedContent(
-                targetState = Pair(selectedMonth, selectedYear),
+                targetState = Pair(viewModel.calendarMonth, viewModel.calendarYear),
                 transitionSpec = {
                     androidx.compose.animation.fadeIn(animationSpec = tween(300)) togetherWith androidx.compose.animation.fadeOut(animationSpec = tween(300))
                 },
@@ -172,14 +174,14 @@ fun CalendarScreen(
 
                     // Month Switcher
                     Row(Modifier.fillMaxWidth().padding(24.dp, 20.dp, 24.dp, 12.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                        IconButton(onClick = { if (selectedMonth == 0) { selectedMonth = 11; selectedYear-- } else selectedMonth--; selectedDay = null }) {
+                        IconButton(onClick = { if (viewModel.calendarMonth == 0) { viewModel.calendarMonth = 11; viewModel.calendarYear-- } else viewModel.calendarMonth--; viewModel.calendarDay = null }) {
                             Icon(Icons.Outlined.ChevronLeft, "Prev", tint = MaterialTheme.colorScheme.onSurface)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("${monthNames[cMonth]} $cYear", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                             Text(fmt.format(cTotalSpent) + " total", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        IconButton(onClick = { if (selectedMonth == 11) { selectedMonth = 0; selectedYear++ } else selectedMonth++; selectedDay = null }) {
+                        IconButton(onClick = { if (viewModel.calendarMonth == 11) { viewModel.calendarMonth = 0; viewModel.calendarYear++ } else viewModel.calendarMonth++; viewModel.calendarDay = null }) {
                             Icon(Icons.Outlined.ChevronRight, "Next", tint = MaterialTheme.colorScheme.onSurface)
                         }
                     }
@@ -205,7 +207,7 @@ fun CalendarScreen(
                                             val f = if (spend > 0) (Math.log10(spend) / Math.log10(cMaxSpend)).coerceIn(0.0, 1.0) else 0.0
                                             val bucket = when { spend == 0.0 -> 0; f < 0.3 -> 1; f < 0.55 -> 2; f < 0.75 -> 3; f < 0.9 -> 4; else -> 5 }
                                             val isToday = cIsCurrentMonth && day == today
-                                            val isSel = day == selectedDay
+                                            val isSel = day == viewModel.calendarDay
                                             val textColor = if (isDarkTheme) {
                                                     if (bucket >= 3) Color(0xFF1D1A14) else MaterialTheme.colorScheme.onSurface
                                                 } else {
@@ -225,7 +227,7 @@ fun CalendarScreen(
                                                         color = if (isToday) MaterialTheme.colorScheme.onSurface else if (isSel) MaterialTheme.colorScheme.primary else if (hasBill) Color(0xFFEE5253) else Color.Transparent, 
                                                         shape = RoundedCornerShape(10.dp)
                                                     )
-                                                    .clickable { selectedDay = if (selectedDay == day) null else day }
+                                                    .clickable { viewModel.calendarDay = if (viewModel.calendarDay == day) null else day }
                                                     .padding(5.dp)
                                             ) {
                                                 Text(day.toString(), Modifier.align(Alignment.TopStart), fontSize = 11.sp, fontWeight = FontWeight.Medium, color = textColor)
@@ -250,7 +252,7 @@ fun CalendarScreen(
         }
 
         // Selected Day Bills
-        if (selectedDay != null && dayBills.isNotEmpty()) {
+        if (viewModel.calendarDay != null && dayBills.isNotEmpty()) {
             item {
                 Text("Bills Due", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEE5253), modifier = Modifier.padding(24.dp, 20.dp, 24.dp, 8.dp))
             }
@@ -274,9 +276,21 @@ fun CalendarScreen(
         }
 
         // Selected Day Transactions
-        if (selectedDay != null && dayTxns.isNotEmpty()) {
+        if (viewModel.calendarDay != null && dayTxns.isNotEmpty()) {
             item {
-                Text("Transactions", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(24.dp, 20.dp, 24.dp, 8.dp))
+                val daySpend = dayTxns.filter { it.isExpense }.sumOf { t ->
+                    val tSplits = splitsByTxn[t.id].orEmpty()
+                    if (tSplits.isNotEmpty()) tSplits.filter { it.category != "Shared/Other" }.sumOf { it.amount } else t.amount
+                } - dayTxns.filter { it.isRefund }.sumOf { it.amount }
+                val netDaySpend = maxOf(0.0, daySpend)
+                Row(
+                    Modifier.fillMaxWidth().padding(24.dp, 20.dp, 24.dp, 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Transactions", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Spent: ${fmt.format(netDaySpend)}", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             items(dayTxns, key = { it.id }) { t ->
                 val tSplits = splitsByTxn[t.id].orEmpty()
@@ -296,11 +310,12 @@ fun CalendarScreen(
                         Text(t.merchant, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(t.category, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                    val isIncome = t.isIncome
                     Text(
-                        fmt.format(displayAmount), 
+                        if (isIncome) "+ " + fmt.format(displayAmount) else fmt.format(displayAmount), 
                         fontSize = 14.sp, 
                         fontWeight = FontWeight.Medium, 
-                        color = if (t.isIgnored) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                        color = if (t.isIgnored) MaterialTheme.colorScheme.onSurfaceVariant else if (isIncome) CatColor.tone("Income") else MaterialTheme.colorScheme.onSurface,
                         textDecoration = if (t.isIgnored) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
                     )
                 }

@@ -193,7 +193,8 @@ object SmsParser {
 
     /** OTP messages — never a transaction even though they mention amounts. */
     private val OTP_PATTERN = Regex(
-        "\\botp\\b|one\\s*time\\s*password|verification\\s*code|do\\s*not\\s*share",
+        "\\botp\\b|one\\s*time\\s*password|verification\\s*code|do\\s*not\\s*share|never\\s+share|" +
+        "verify\\s+your\\s+mobile|registration\\s+for|do\\s+not\\s+hand\\s+over|started\\s+the\\s+process",
         RegexOption.IGNORE_CASE
     )
 
@@ -201,16 +202,18 @@ object SmsParser {
     private val PROMO_PATTERN = Regex(
         "pre-?approved|apply\\s+now|click\\s+here|click\\s+below|exclusive\\s+offer|" +
         "limited\\s+period|t&c\\s+apply|terms\\s+(and|&)\\s+conditions\\s+apply|" +
-        "get\\s+(up\\s+to|flat)|earn\\s+(up\\s+to|flat)|win\\s+(up\\s+to|flat)|" +
+        "get\\s+(up\\s+to|flat|an\\s+amazon)|earn\\s+(up\\s+to|flat)|win\\s+(up\\s+to|flat)|" +
         "lowest\\s+rates|attractive\\s+rates|attractive\\s+interest|" +
         "shop\\s+(now|today)|book\\s+now|grab\\s+(now|the\\s+offer)|hurry|" +
-        "convert\\s+(to|into)\\s+emi|convert\\s+your\\s+purchase",
+        "convert(ed)?\\s+(to|into)\\s+emi|convert(ed)?\\s+your\\s+purchase|convert(ed)?\\s+.*?into\\s+emis?|convert(ed)?\\s+spends\\s+worth|" +
+        "limit\\s+(?:has\\s+been\\s+)?(?:increased|enhanced|upgraded)|reward\\s+points\\s+worth|" +
+        "voucher\\s+worth|loan\\s+of\\s+(?:rs\\.?|inr|₹)",
         RegexOption.IGNORE_CASE
     )
 
     /** Balance-enquiry-only SMS: no debit/credit verb, just "balance is" content. */
     private val BALANCE_ENQUIRY_PATTERN = Regex(
-        "(available|avbl|avl)\\s*(balance|bal)\\s*(in|of|for|as\\s*on|is)",
+        "(available|avbl|avl)\\s*(balance|bal)\\s*(in|of|for|as\\s*on|is)|credit\\s+balance\\s+of",
         RegexOption.IGNORE_CASE
     )
 
@@ -221,22 +224,25 @@ object SmsParser {
         "(auto\\s*pay|auto.?debit|standing\\s*instruction)\\s+(is\\s+)?" +
         "(scheduled|due|reminder|set\\s+up)|" +
         "scheduled\\s+(on|for)|reminder[:\\s]|" +
-        "due\\s+for\\s+(payment|auto.?debit)",
+        "due\\s+for\\s+(payment|auto.?debit)|" +
+        "proceed\\s+with\\s+the\\s+payment|click.*to\\s+pay",
         RegexOption.IGNORE_CASE
     )
 
     /** Failed/declined/reversed transaction. */
     private val FAILED_TXN_PATTERN = Regex(
         "\\b(failed|declined|unsuccessful|could\\s+not\\s+be\\s+processed|not\\s+processed|" +
-        "rejected|cancelled|canceled|reversed)\\b",
+        "rejected|cancelled|canceled|reversed|withheld|insufficient\\s+funds|bounced)\\b|" +
+        "security\\s+reasons",
         RegexOption.IGNORE_CASE
     )
 
     /** Bill statement keywords — those go to parseBillSms, not parseSms. */
     private val BILL_STATEMENT_PATTERN = Regex(
-        "(statement|bill)\\s+(is\\s+)?generated|" +
+        "(statement|bill)\\s+(is\\s+)?(?:generated|sent)|" +
         "total\\s+amount\\s+due|min(?:imum)?\\s+amount\\s+due|" +
-        "total\\s+due[:\\s]|payment\\s+due\\s+on|due\\s+date",
+        "total\\s+due[:\\s]|payment\\s+due\\s+on|due\\s+date|" +
+        "total\\s+of\\s+(?:rs\\.?|inr|₹)|minimum\\s+of\\s+(?:rs\\.?|inr|₹)|is\\s+due\\s+by",
         RegexOption.IGNORE_CASE
     )
 
@@ -353,12 +359,13 @@ object SmsParser {
      */
     private val CREDIT_CARD_PAYMENT_PATTERN = Regex(
         "(?i)(" +
-        "payment\\s+of\\s+(?:rs\\.?|inr|₹)?\\s*[\\d,]+(?:\\.\\d{1,2})?\\s+(?:has\\s+been\\s+)?received\\s+(?:on|towards|for|against)\\s+(?:your\\s+)?(?:credit\\s*card|card)" +
+        "payment\\s+of\\s+(?:rs\\.?|inr|₹)?\\s*[\\d,.]+\\s+.*?(?:received|credited).*?(?:credit\\s*card|card\\s*ending|card\\s*a/c|card\\s*no|card\\s*account|\\bcard\\b)" +
         "|payment\\s+(?:has\\s+been\\s+)?received\\s+(?:on|towards|for|against)\\s+(?:your\\s+)?(?:credit\\s*card|card)" +
         "|received\\s+towards\\s+(?:your\\s+)?(?:credit\\s*card|card)\\s+(?:bill|payment|dues|outstanding|ending)" +
         "|towards\\s+(?:your\\s+)?credit\\s*card\\s+(?:bill|payment|dues|outstanding)" +
         "|paid\\s+towards\\s+(?:your\\s+)?credit\\s*card" +
         "|credit\\s*card\\s+(?:bill\\s+)?payment\\s+(?:of|received|done|successful|is\\s+successful)" +
+        "|paid\\s+via\\s+cred" +
         ")"
     )
 
@@ -368,12 +375,19 @@ object SmsParser {
         "transfer(?:red)?\\s+to\\s+your\\s+own\\b|" +
         "self[-\\s]transfer|" +
         "to\\s+your\\s+own\\s+(?:account|a/c|savings)|" +
-        "moved\\s+to\\s+your\\s+own" +
+        "moved\\s+to\\s+your\\s+own|" +
+        "fixed\\s+deposit\\s+creation|rd\\s+debit|atm\\s+cash\\s+withdrawal|" +
+        "added\\s+to\\s+(?:paytm|amazon\\s+pay)\\s+wallet|wallet\\s+load" +
         ")"
     )
 
+    /** Pre-authorizations and Mandates are holds, not spends */
+    private val MANDATE_AUTH_PATTERN = Regex(
+        "(?i)mandate\\s+(?:created|registered|set\\s+up)|amount\\s+(?:blocked|authorized)"
+    )
+
     private fun detectTransfer(sms: String): Boolean =
-        CREDIT_CARD_PAYMENT_PATTERN.containsMatchIn(sms) || SELF_TRANSFER_PATTERN.containsMatchIn(sms)
+        CREDIT_CARD_PAYMENT_PATTERN.containsMatchIn(sms) || SELF_TRANSFER_PATTERN.containsMatchIn(sms) || MANDATE_AUTH_PATTERN.containsMatchIn(sms)
 
     /** Public detector used to re-tag already-stored transactions after an app upgrade. */
     fun isTransferSms(sms: String): Boolean = detectTransfer(sms)
@@ -392,14 +406,14 @@ object SmsParser {
         Regex("(?i)\\bbal(?:ance)?[:\\s]+(?:rs\\.?|inr|₹)?\\s*[\\d,]+(?:\\.\\d{1,2})?[^,.;\\n]{0,30}"),
         Regex("(?i)\\bnew\\s+bal[:\\s]+(?:rs\\.?|inr|₹)?\\s*[\\d,]+(?:\\.\\d{1,2})?"),
         Regex("(?i)total\\s+avl\\s+bal[^,.;\\n]{0,60}"),
-        // "Call 1800..." / "SMS BLOCK 1234 to 5676782" / "Block at hdfcbk.in/sec"
         Regex("(?i)\\bcall\\s+\\d{4,}[^.;\\n]{0,80}"),
         Regex("(?i)\\bsms\\s+block\\s+\\S+\\s+to\\s+\\d+[^.;\\n]{0,80}"),
         Regex("(?i)\\bsms\\s+block\\s+to\\s+\\d+[^.;\\n]{0,80}"),
         Regex("(?i)\\bblock\\s+(at|on)\\s+\\S+"),
         Regex("(?i)\\bnot\\s+you\\??[^.;\\n]{0,80}"),
         // "outstanding of Rs.X"
-        Regex("(?i)outstanding\\s+of\\s+(?:rs\\.?|inr|₹)?\\s*[\\d,]+(?:\\.\\d{1,2})?")
+        Regex("(?i)outstanding\\s+of\\s+(?:rs\\.?|inr|₹)?\\s*[\\d,]+(?:\\.\\d{1,2})?"),
+        Regex("(?i)(?:outstanding|total)\\s+balance\\s+(?:of|is)?\\s+(?:rs\\.?|inr|₹)?\\s*[\\d,]+(?:\\.\\d{1,2})?")
     )
 
     /**
